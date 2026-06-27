@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Text Expander",
+  "version": "0.1.0",
+  "description": "Replace typed triggers in text fields with saved snippets.",
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "service_worker.js"
+  }
+}
