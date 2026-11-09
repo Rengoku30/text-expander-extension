@@ -7,10 +7,10 @@ Example: type `;addr`, then press Space, Enter, or Tab. The extension replaces i
 ## Files
 
 - `manifest.json` - MV3 extension manifest
+- `match.js` - pure trigger-matching logic (unit tested: `node --test`)
 - `content.js` - detects typed triggers and performs replacement
 - `options.html` - snippet management UI
 - `options.js` - storage, validation, import/export, and UI logic
-- `service_worker.js` - background service worker placeholder
 
 ## Install locally
 
@@ -25,7 +25,8 @@ Example: type `;addr`, then press Space, Enter, or Tab. The extension replaces i
 1. Add a trigger like `;addr`.
 2. Add snippet text like `123 Main St`.
 3. In a text field, type `;addr`.
-4. Press Space, Enter, or Tab to expand.
+4. Press Space, Enter, or Tab to expand. Space keeps a trailing space; Enter and Tab expand only (the key is swallowed, so Enter does not send a chat message).
+5. A trigger only expands when it is not glued to a word: `hello;addr` stays as typed, `hello ;addr` expands. Undo (Ctrl+Z) reverts an expansion.
 
 ## Error handling included
 

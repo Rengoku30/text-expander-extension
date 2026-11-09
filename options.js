@@ -55,6 +55,7 @@
 
   function validateTrigger(trigger) {
     if (!trigger) return "Trigger is required.";
+    if (trigger === "__proto__") return "Trigger is reserved.";
     if (/\s/.test(trigger)) return "Trigger cannot contain spaces or newlines.";
     if (trigger.length > MAX_TRIGGER_LENGTH) return `Trigger must be ${MAX_TRIGGER_LENGTH} characters or fewer.`;
     return null;
