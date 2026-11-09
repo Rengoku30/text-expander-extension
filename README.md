@@ -36,8 +36,12 @@ Example: type `;addr`, then press Space, Enter, or Tab. The extension replaces i
 - Content-script failures are non-fatal and logged as warnings.
 - Read-only, disabled, password, and unsupported input fields are ignored.
 - Snippet cache updates when storage changes.
+- Saving asks first when a trigger would be overwritten or is a very short plain word (1-3 letters/digits). Empty snippets are rejected. Editing a snippet and changing its trigger renames it.
+- Works in iframes, open shadow DOM, and `<input type="email">` (caret assumed at end of the value).
 
 ## Known limitations
+
+Not supported: closed shadow roots, `brave://`/`chrome://` pages, the Web Store, and `file://` pages unless you allow file access for the extension. Snippets are plain text and live in `chrome.storage.local`: they are tied to the extension ID, which for an unpacked extension depends on its folder path, so export a backup before moving the folder.
 
 Complex web editors such as Google Docs, Notion, Slack, and Gmail may use custom DOM/input systems. Basic `contenteditable` fields are supported, but these apps may need editor-specific handling.
 

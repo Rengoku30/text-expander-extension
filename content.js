@@ -36,8 +36,15 @@
     return safeStorageGet(TRIGGERS_KEY).then((data) => rebuildTriggerCache(data[TRIGGERS_KEY] || {}));
   }
 
+  // Follows focus into open shadow roots (web components).
+  function deepActiveElement() {
+    let active = document.activeElement;
+    while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+    return active;
+  }
+
   function getActiveEditable() {
-    const active = document.activeElement;
+    const active = deepActiveElement();
     if (!active) return null;
 
     const tag = active.tagName?.toLowerCase();
@@ -82,7 +89,16 @@
   }
 
   function replaceInInput(el, after) {
+    // <input type="email"> exposes no caret/selection APIs. Switch it to text
+    // for the edit, treat the caret as end-of-value, and restore the type.
+    // Email values are whitespace-trimmed, so no trailing space is re-added.
+    const restoreType = el.type === "email" ? "email" : null;
     try {
+      if (restoreType) {
+        el.type = "text";
+        el.setSelectionRange(el.value.length, el.value.length);
+        after = "";
+      }
       const end = el.selectionStart;
       if (end === null || end !== el.selectionEnd) return false;
 
@@ -103,6 +119,8 @@
     } catch (error) {
       logWarn("Input replacement failed:", error?.message || error);
       return false;
+    } finally {
+      if (restoreType) el.type = restoreType;
     }
   }
 
@@ -147,7 +165,9 @@
 
   function replaceInContentEditable(active, after) {
     try {
-      const selection = window.getSelection();
+      // Inside a shadow root the page-level selection is retargeted; use the root's own.
+      const tree = active.getRootNode();
+      const selection = (tree instanceof ShadowRoot && tree.getSelection?.()) || window.getSelection();
       if (!selection || selection.rangeCount === 0) return false;
 
       const caret = selection.getRangeAt(0);

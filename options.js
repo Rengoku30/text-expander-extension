@@ -21,6 +21,7 @@
   };
 
   let snippets = {};
+  let editingTrigger = null; // set by Edit; saving under a new name renames
 
   function setStatus(message, type = "ok") {
     els.status.textContent = message;
@@ -62,6 +63,7 @@
   }
 
   function validateSnippet(snippet) {
+    if (!snippet) return "Snippet is empty. Use Remove to delete a trigger.";
     if (snippet.length > MAX_SNIPPET_LENGTH) return `Snippet must be ${MAX_SNIPPET_LENGTH} characters or fewer.`;
     return null;
   }
@@ -79,6 +81,7 @@
     for (const [rawTrigger, rawSnippet] of Object.entries(source)) {
       const trigger = String(rawTrigger).trim();
       const snippet = String(rawSnippet ?? "");
+      if (!snippet) continue; // empty snippets are skipped, not fatal
       const triggerError = validateTrigger(trigger);
       const snippetError = validateSnippet(snippet);
       if (triggerError) throw new Error(`Invalid trigger ${JSON.stringify(rawTrigger)}: ${triggerError}`);
@@ -102,6 +105,7 @@
   function clearForm() {
     els.trigger.value = "";
     els.text.value = "";
+    editingTrigger = null;
     els.trigger.focus();
   }
 
@@ -143,6 +147,7 @@
       editBtn.addEventListener("click", () => {
         els.trigger.value = trigger;
         els.text.value = snippet;
+        editingTrigger = trigger;
         els.text.focus();
       });
 
@@ -160,9 +165,23 @@
       if (triggerError) throw new Error(triggerError);
       if (snippetError) throw new Error(snippetError);
 
+      const renaming = editingTrigger !== null && editingTrigger !== trigger;
+      const warnings = [];
+      if (Object.prototype.hasOwnProperty.call(snippets, trigger) && trigger !== editingTrigger) {
+        warnings.push(`"${trigger}" already exists and will be overwritten.`);
+      }
+      if (/^[\p{L}\p{N}]{1,3}$/u.test(trigger)) {
+        warnings.push(`"${trigger}" is a very short plain word: it will expand every time you type it followed by Space, Enter or Tab. Consider a prefix such as ";".`);
+      }
+      if (warnings.length && !confirm(warnings.join("\n\n") + "\n\nSave anyway?")) {
+        setStatus("Not saved.");
+        return;
+      }
+
+      if (renaming) delete snippets[editingTrigger];
       snippets[trigger] = snippet;
       await persistSnippets();
-      setStatus(`Saved ${trigger}.`);
+      setStatus(renaming ? `Renamed ${editingTrigger} to ${trigger}.` : `Saved ${trigger}.`);
       clearForm();
     } catch (error) {
       setStatus(error.message, "error");
